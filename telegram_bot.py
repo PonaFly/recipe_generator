@@ -12,29 +12,10 @@ from keras.models import model_from_json
 os.environ["CUDA_DEVICE_ORDER"]= 'PCI_BUS_ID'  
 os.environ["CUDA_VISIBLE_DEVICES"]= '1'
 
-UNKNOWN_INDEX = 1
-SEQUENCE_START = '<START>'
-SEQUENCE_END = '<END>'
-MAX_TEXT_LENGTH = 120
-
 json_file = open('private_data.json', 'r')
 private_data = json.loads(json_file.read())
 bot = telebot.TeleBot(private_data['api_token'])
 
-with open('vocabulary.pkl', 'rb') as f: 
-    vocabulary = pickle.load(f)
-
-token_by_index = {index: token for token, index in vocabulary.items()}
-
-SEQUENCE_START_INDEX = vocabulary[SEQUENCE_START]
-SEQUENCE_END_INDEX = vocabulary[SEQUENCE_END]
-
-
-model = model_load(private_data['weights_name'])
-global graph
-graph = tf.get_default_graph()
-
-json_file.close()
 
 def clear_session():
     config = tf.ConfigProto()
@@ -43,13 +24,13 @@ def clear_session():
     K.get_session().graph.get_collection('variables')
     K.clear_session()
     
-def model_load(model_weights):
+def model_load():
     clear_session()
     json_file = open('2x_gru_model.json', 'r')
     loaded_model_json = json_file.read()
     json_file.close()
     model = model_from_json(loaded_model_json)
-    model.load_weights(model_weights)
+    model.load_weights('2x_gru_model_weights.h5')
     print('model loaded!')
     return model    
 
@@ -112,6 +93,26 @@ def send_generate(message):
     with graph.as_default():
         bot.send_message(message.chat.id, generate())
 
+UNKNOWN_INDEX = 1
+SEQUENCE_START = '<START>'
+SEQUENCE_END = '<END>'
+MAX_TEXT_LENGTH = 120
+
+
+with open('vocabulary.pkl', 'rb') as f: 
+    vocabulary = pickle.load(f)
+
+token_by_index = {index: token for token, index in vocabulary.items()}
+
+SEQUENCE_START_INDEX = vocabulary[SEQUENCE_START]
+SEQUENCE_END_INDEX = vocabulary[SEQUENCE_END]
+
+
+model = model_load()
+global graph
+graph = tf.get_default_graph()
+
+json_file.close()
 
 
 #bot.infinity_polling(True) uncomment this and comment cycle below if you have a stable network
