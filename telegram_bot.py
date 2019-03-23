@@ -53,45 +53,61 @@ def generate():
             if seed < total and i not in [UNKNOWN_INDEX, SEQUENCE_START_INDEX, SEQUENCE_END_INDEX] and i != indices[-1]:
                 indices.append(i)
                 break
+                
 
+recipe_str = 'recipe 🍩🍰'
+info_str =  'info 🔞'
+more_str = 'more, please 🙏'
+author_str = 'author 😎'
 
+info_but = telebot.types.KeyboardButton(info_str)
+author_but = telebot.types.KeyboardButton(author_str)
+more_but = telebot.types.KeyboardButton(more_str)
+recipe_but = telebot.types.KeyboardButton(recipe_str)
+
+start_markup = telebot.types.ReplyKeyboardMarkup(row_width=1)
+start_markup.add(recipe_but, more_but)
+
+main_markup = telebot.types.ReplyKeyboardMarkup(row_width=3)
+main_markup.add(info_but,author_but,more_but, recipe_but)
 
 @bot.message_handler(commands=['start'])
 def send_welcome(message):
-    welcome_message = "Hey! I'm a recipe bot v 0.3. and I trying to generate desserts and baking recipes\n"
-    welcome_message += '/help command to see what can I do =)'
-    bot.send_message(message.chat.id, welcome_message)
+    welcome_message = "Hey! I'm a recipe bot v 0.4. and I'm trying to generate desserts and baking recipes🍪🍧 😁\n"
+    bot.send_message(message.chat.id, welcome_message, reply_markup=start_markup)
     
-@bot.message_handler(commands=['help'])
-def send_help(message):
-    help_message = "I am the recipe generator neural network\nIf you wanna to get the recipe - just write 'recipe' or 'рецепт'\n"
-    help_message += 'Some more commands:\n/info - how does it work\n/future - updates that may be added\n/author - creator contacts'
-    bot.send_message(message.chat.id, help_message)
+@bot.message_handler(func=lambda message: message.text.lower() == more_str)
+def send_main(message):
+    main_message = 'info - how does it work👷\nauthor - creator contacts😎'
+    bot.send_message(message.chat.id, main_message, reply_markup=main_markup)
 
-@bot.message_handler(commands=['info'])
+@bot.message_handler(func=lambda message: message.text.lower() == info_str)
 def send_info(message):
-    info_message = "For those who know - I am a simple recurrent neural network using 2 gru layers with embedding input vectors. "
-    info_message += 'Embedding dim is 120, activations - tanh, sigmoid\n'
-    info_message += 'For others - I am a neural network, who is trying to remember combinations of words from human-made recipes. '
-    info_message += 'I have no idea how to create a new word, but I guarantee that each recipe is unique =)'
+    info_message = "For those who know - I am a simple recurrent neural network using 2 gru layers with embedding input vectors.\n"
+    info_message += 'Embedding dim is 120, activations - tanh, sigmoid🛀\n'
+    info_message += 'For others - I am a neural network, who is trying to remember combinations of words from human-made recipes.🍲\n '
+    info_message += 'I have no idea how to create a new word, but I guarantee that each recipe is unique😍'
     bot.send_message(message.chat.id, info_message)
     
-@bot.message_handler(commands=['author'])
+@bot.message_handler(func=lambda message: message.text.lower() == author_str)
 def send_author(message):
     author_message = " telegram @masmx86\n vk https://vk.com/id179091229"
-    bot.send_message(message.chat.id, author_message)
+    bot.send_message(message.chat.id, author_message, reply_markup=main_markup)
     
-@bot.message_handler(commands=['future'])
-def send_future(message):
-    future_message = "1.Using buttons to make dialogue faster\n2.Model with more accuracy\n3.More categories of recepies(unlikely)"
-    bot.send_message(message.chat.id, future_message)
     
-
     
-@bot.message_handler(func=lambda message: message.text.lower() in  ['recipe','рецепт'])
+@bot.message_handler(func=lambda message: message.text.lower() in  ['recipe','рецепт','generate',recipe_str])
 def send_generate(message):
     with graph.as_default():
-        bot.send_message(message.chat.id, generate())
+        bot.send_message(message.chat.id, 'please, wait...⏳')
+        bot.send_message(message.chat.id, generate(), )
+        bot.send_message(message.chat.id, '⬆gotcha⬆\n🍻🍻',reply_markup=main_markup)
+        
+@bot.message_handler(func=lambda message: True)
+def send_undefined(message):
+    send_welcome(message)
+    bot.send_message(message.chat.id, 'I have no idea what do you want 😡\n Please use buttons')
+
 
 UNKNOWN_INDEX = 1
 SEQUENCE_START = '<START>'
@@ -115,10 +131,10 @@ graph = tf.get_default_graph()
 json_file.close()
 
 
-#bot.infinity_polling(True) uncomment this and comment cycle below if you have a stable network
+bot.infinity_polling(True) #uncomment this and comment cycle below if you have a stable network
 
-while True:
-    try:
-        bot.polling(True)
-    except:
-        continue
+#while True:
+#    try:
+        #bot.polling(True)
+#    except:
+#        continue
