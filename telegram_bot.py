@@ -69,7 +69,7 @@ def generate():
                     word = word.capitalize()
                     dot_flag = False
                     
-                if word in [')','.',',']:
+                if word in [')','.',',',':']:
                     words_list[-1] = words_list[-1] + word
                 elif words_list[-1] == '(':
                     words_list[-1] = words_list[-1] + word
