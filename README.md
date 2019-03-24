@@ -1,7 +1,6 @@
 # recipe generator
 ## My first nlp generator 
 
-## Please link to this repo if you use code from here, or just fork it
 
 ### steps:
 
