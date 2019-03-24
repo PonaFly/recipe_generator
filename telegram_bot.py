@@ -16,6 +16,22 @@ json_file = open('private_data.json', 'r')
 private_data = json.loads(json_file.read())
 bot = telebot.TeleBot(private_data['api_token'])
 
+UNKNOWN_INDEX = 1
+SEQUENCE_START = '<START>'
+SEQUENCE_END = '<END>'
+MAX_TEXT_LENGTH = 120
+
+
+with open('vocabulary.pkl', 'rb') as f: 
+    vocabulary = pickle.load(f)
+
+token_by_index = {index: token for token, index in vocabulary.items()}
+
+SEQUENCE_START_INDEX = vocabulary[SEQUENCE_START]
+SEQUENCE_END_INDEX = vocabulary[SEQUENCE_END]
+
+json_file.close()
+
 
 def clear_session():
     config = tf.ConfigProto()
@@ -42,8 +58,24 @@ def generate():
 
         predictions = model.predict(sequence)[0]
         j += 1
-        if (predictions.argmax() == SEQUENCE_END_INDEX) :
-            return ' '.join(token_by_index[index] for index in indices[1:])
+        if (predictions.argmax() == SEQUENCE_END_INDEX):
+            words_list = ['.']
+            dot_flag = True
+            for index in indices[1:]:
+                word = token_by_index[index]
+                if word == '.':
+                    dot_flag = True
+                elif dot_flag:
+                    word = word.capitalize()
+                    dot_flag = False
+                    
+                if word in [')','.',',']:
+                    words_list[-1] = words_list[-1] + word
+                elif words_list[-1] == '(':
+                    words_list[-1] = words_list[-1] + word
+                else:
+                    words_list.append(word)
+            return ' '.join(words_list[1:])
         
         seed = random.random()
         
@@ -101,34 +133,18 @@ def send_generate(message):
     with graph.as_default():
         bot.send_message(message.chat.id, 'please, wait...⏳')
         bot.send_message(message.chat.id, generate(), )
-        bot.send_message(message.chat.id, '⬆gotcha⬆\n🍻🍻',reply_markup=main_markup)
+        bot.send_message(message.chat.id, 'gotcha⬆⬆\n🍻🍻',reply_markup=main_markup)
         
 @bot.message_handler(func=lambda message: True)
 def send_undefined(message):
     send_welcome(message)
     bot.send_message(message.chat.id, 'I have no idea what do you want 😡\n Please use buttons')
 
-
-UNKNOWN_INDEX = 1
-SEQUENCE_START = '<START>'
-SEQUENCE_END = '<END>'
-MAX_TEXT_LENGTH = 120
-
-
-with open('vocabulary.pkl', 'rb') as f: 
-    vocabulary = pickle.load(f)
-
-token_by_index = {index: token for token, index in vocabulary.items()}
-
-SEQUENCE_START_INDEX = vocabulary[SEQUENCE_START]
-SEQUENCE_END_INDEX = vocabulary[SEQUENCE_END]
-
-
 model = model_load()
 global graph
 graph = tf.get_default_graph()
 
-json_file.close()
+
 
 
 bot.infinity_polling(True) #uncomment this and comment cycle below if you have a stable network
