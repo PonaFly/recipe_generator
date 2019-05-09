@@ -4,7 +4,8 @@
 
 ### steps:
 
-1. data_scraping.py - you must change food_url => others fields too, because, I think, I have no rule to submit website from which I do scrapping.
+1. data_scraping.py - you must change food_url => others fields too
+
 So, after running this script we have result .pkl file, which have dictionaries of recepies(name, instructions,etc)
 
 2. Then you need to use data_manipulating.ipynb to make sequences
